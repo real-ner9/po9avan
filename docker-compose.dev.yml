@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  mongo-dev:
+    image: mongo:6.0
+    container_name: lotofleads-mongo-dev
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27018:27017" # Dev порт остается открытым для локальной разработки
+    volumes:
+      - mongo_dev_data:/data/db
+
+volumes:
+  mongo_dev_data:

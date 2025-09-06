@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  bot-prod:
+    build: .
+    container_name: lotofleads-bot-prod
+    restart: always
+    env_file: .env.prod
+    ports:
+      - "3000:3000"
+    networks:
+      - lotofleads_app_network
+    # Без depends_on! Бот коннектится к mongo по адресу/порту из переменной окружения
+
+networks:
+  lotofleads_app_network:
+    external: true
