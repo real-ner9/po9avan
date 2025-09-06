@@ -77,8 +77,8 @@ With Mau, you can deploy your application in just a few clicks, allowing you to 
 
 ```
 PORT=3000
-MONGODB_URI=mongodb://mongo:27017/po9avan
-TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН
+MONGO_URI=mongodb://mongo:27017/po9avan
+BOT_TOKEN=ВАШ_ТОКЕН
 WEBAPP_URL=http://localhost:3000/
 ```
 

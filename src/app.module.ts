@@ -20,12 +20,12 @@ import { MatchesModule } from './matches/matches.module';
     }),
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/po9avan',
+        uri: process.env.MONGO_URI,
       }),
     }),
     TelegrafModule.forRootAsync({
       useFactory: () => ({
-        token: process.env.TELEGRAM_BOT_TOKEN as string,
+        token: process.env.BOT_TOKEN as string,
       }),
     }),
     UsersModule,
