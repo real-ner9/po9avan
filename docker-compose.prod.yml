@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mongo-prod:
     image: mongo:6.0
-    container_name: lotofleads-mongo-prod
+    container_name: po9avan-mongo-prod
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}

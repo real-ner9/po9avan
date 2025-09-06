@@ -9,7 +9,8 @@ yarn-error.log*
 /coverage/
 
 # env files
-.env
+.env.prod
+.env.dev
 .env.*
 !.env.example
 
