@@ -10,6 +10,7 @@ import { MenuService } from './menu.service';
 import { AuthService } from './auth.service';
 import { HhService } from './hh.service';
 import { ProfessionModule } from '../catalogs/profession/profession.module';
+import { FeedModule } from '../feed/feed.module';
 // removed mentors service
 
 @Module({
@@ -20,6 +21,7 @@ import { ProfessionModule } from '../catalogs/profession/profession.module';
     }),
     UserModule,
     ProfessionModule,
+    FeedModule,
   ],
   providers: [
     BotInitializer,

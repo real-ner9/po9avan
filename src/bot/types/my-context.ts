@@ -1,17 +1,12 @@
 import { Context } from 'telegraf';
 
 export interface RegistrationDraft {
-  telegramId?: string;
-  username?: string;
-  sphere?: string;
-  profession?: string; // будет хранить ObjectId как строку
-  professionName?: number; // будет хранить название профессии для удобства
-  targetProfession?: string; // будет хранить ObjectId как строку
-  targetProfessionName?: number; // будет хранить название профессии для удобства
-  experienceYears?: number;
-  about?: string;
-  professionCategoryId?: number;
-  targetProfessionCategoryId?: number;
+  telegramId: string;
+  username: string;
+  profession: string; // будет хранить ObjectId как строку
+  targetProfession: string; // будет хранить ObjectId как строку
+  experienceYears: number;
+  about: string;
 }
 
 export interface SessionData {

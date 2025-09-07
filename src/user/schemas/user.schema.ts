@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { daysToMs } from '../../common/utils/get-time';
-import { Profession, ProfessionDocument } from '../../catalogs/profession/profession.schema';
+import {
+  Profession,
+  ProfessionDocument,
+} from '../../catalogs/profession/profession.schema';
 
 @Schema({ timestamps: true })
 export class User {
@@ -12,16 +14,16 @@ export class User {
   username: string;
 
   @Prop({ type: Types.ObjectId, ref: Profession.name })
-  profession: ProfessionDocument['_id'];
+  profession: ProfessionDocument;
 
   @Prop({ type: Types.ObjectId, ref: Profession.name })
-  targetProfession: ProfessionDocument['_id'];
+  targetProfession: ProfessionDocument;
 
   @Prop({ type: Number, min: 0, max: 13 })
   experienceYears: number;
 
   @Prop({ type: String })
-  about: string; // кратко о себе
+  about: string;
 }
 
 export type UserDocument = User & Document<Types.ObjectId>;

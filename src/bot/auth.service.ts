@@ -107,8 +107,16 @@ export class AuthService {
     const targetProfession = await this.professionService.findById(
       ctx.session.data.targetProfession,
     );
+    if (!profession || !targetProfession) {
+      await ctx.reply(ERRORS.PROFESSION_NOT_FOUND);
+      return this.exitSession(ctx);
+    }
     await ctx.reply(
-      formatUserProfile({ ...ctx.session.data, profession, targetProfession }),
+      formatUserProfile({
+        ...ctx.session.data,
+        profession: profession.name,
+        targetProfession: targetProfession.name,
+      }),
     );
     ctx.session.step = 'confirm';
     await ctx.reply(REPLIES.REGISTRATION.CONFIRM_INTRO);
@@ -128,14 +136,7 @@ export class AuthService {
       return this.exitSession(ctx);
     }
     try {
-      await this.userService.createUser({
-        telegramId: data.telegramId,
-        username: data.username,
-        profession: data.profession,
-        targetProfession: data.targetProfession,
-        experienceYears: data.experienceYears,
-        about: data.about,
-      });
+      await this.userService.createUser(data as RegistrationDraft);
       await ctx.reply(REPLIES.REGISTRATION.SAVED);
     } catch (error) {
       await ctx.reply(
