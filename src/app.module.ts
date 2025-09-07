@@ -1,42 +1,19 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { TelegrafModule } from 'nestjs-telegraf';
-import { TelegramWebAppAuthMiddleware } from './common/telegram-webapp.middleware';
-import { TelegramModule } from './telegram/telegram.module';
-import { MatchesModule } from './matches/matches.module';
+import { BotModule } from './bot/bot.module';
+import { ProfessionModule } from './catalogs/profession/profession.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'public'),
-      serveRoot: '/',
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath:
+        process.env.NODE_ENV === 'production' ? '.env.prod' : '.env.dev',
     }),
-    MongooseModule.forRootAsync({
-      useFactory: () => ({
-        uri: process.env.MONGO_URI,
-      }),
-    }),
-    TelegrafModule.forRootAsync({
-      useFactory: () => ({
-        token: process.env.BOT_TOKEN as string,
-      }),
-    }),
-    UsersModule,
-    TelegramModule,
-    MatchesModule,
+    MongooseModule.forRoot(process.env.MONGO_URI as string),
+    BotModule,
+    ProfessionModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, TelegramWebAppAuthMiddleware],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TelegramWebAppAuthMiddleware).forRoutes('api');
-  }
-}
+export class AppModule {}
