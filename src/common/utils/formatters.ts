@@ -14,7 +14,7 @@ export const formatUserProfile = (user: User): string => {
     '      Профиль      ',
     '====================',
     '--------------------',
-    'Ваша профессия: ' + toLabel(user.profession),
+    'Профессия: ' + toLabel(user.profession),
     'Целевая профессия: ' + toLabel(user.targetProfession),
     'Опыт: ' + (user.experienceYears ?? 0) + ' световых лет',
     '--------------------',

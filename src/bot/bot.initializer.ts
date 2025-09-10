@@ -8,9 +8,9 @@ export class BotInitializer implements OnModuleInit {
 
   async onModuleInit() {
     await this.bot.telegram.setMyCommands([
-      { command: 'start', description: '🚀 Старт' },
       { command: 'profile', description: '📺 Профиль' },
       { command: 'feed', description: '📰 Лента' },
+      { command: 'matches', description: 'Метчи' },
     ]);
   }
 }

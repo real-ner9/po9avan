@@ -36,4 +36,8 @@ export class UserService {
     });
     return user.save();
   }
+
+  getModel(): Model<UserDocument> {
+    return this.userModel;
+  }
 }

@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Reaction, ReactionSchema } from './feed.schema';
 import { FeedService } from './feed.service';
 import { UserModule } from '../user/user.module';
-import { TelegrafModule } from 'nestjs-telegraf';
+import { MatchModule } from '../match/match.module';
 
 @Module({
   imports: [
@@ -11,7 +11,7 @@ import { TelegrafModule } from 'nestjs-telegraf';
       { name: Reaction.name, schema: ReactionSchema },
     ]),
     UserModule,
-    TelegrafModule,
+    MatchModule,
   ],
   providers: [FeedService],
   exports: [FeedService],

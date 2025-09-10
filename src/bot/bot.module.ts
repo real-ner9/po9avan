@@ -6,11 +6,11 @@ import { BotInitializer } from './bot.initializer';
 import { UserModule } from '../user/user.module';
 import { session } from 'telegraf';
 import { StepsService } from './steps.service';
-import { MenuService } from './menu.service';
 import { AuthService } from './auth.service';
 import { HhService } from './hh.service';
 import { ProfessionModule } from '../catalogs/profession/profession.module';
 import { FeedModule } from '../feed/feed.module';
+import { MatchModule } from '../match/match.module';
 // removed mentors service
 
 @Module({
@@ -22,12 +22,12 @@ import { FeedModule } from '../feed/feed.module';
     UserModule,
     ProfessionModule,
     FeedModule,
+    MatchModule,
   ],
   providers: [
     BotInitializer,
     BotUpdate,
     BotService,
-    MenuService,
     StepsService,
     AuthService,
     HhService,

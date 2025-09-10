@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MyContext, RegistrationDraft } from './types/my-context';
 import { UserService } from '../user/user.service';
-import { MenuService } from './menu.service';
 import { REPLIES } from '../common/constants/replies';
 import { ERRORS } from '../common/constants/errors';
 import { ProfessionService } from '../catalogs/profession/profession.service';
@@ -11,7 +10,6 @@ import { formatUserProfile } from '../common/utils/formatters';
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly menuService: MenuService,
     private readonly professionService: ProfessionService,
   ) {}
 
