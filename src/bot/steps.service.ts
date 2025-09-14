@@ -2,13 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { MyContext } from './types/my-context';
 import { AuthService } from './auth.service';
 import { REPLIES } from '../common/constants/replies';
-import { ProfessionService } from '../catalogs/profession/profession.service';
 
 @Injectable()
 export class StepsService {
   constructor(
     private readonly authService: AuthService,
-    private readonly professionService: ProfessionService,
   ) {}
 
   async onStepHandler(ctx: MyContext) {
@@ -22,6 +20,10 @@ export class StepsService {
     if (!text || !step) return;
 
     switch (step) {
+      case 'nickname': {
+        await this.authService.handleNicknameStep(ctx, text);
+        break;
+      }
       case 'profession': {
         await this.authService.handleProfessionStep(ctx, text);
         break;

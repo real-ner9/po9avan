@@ -3,6 +3,7 @@ import { Context } from 'telegraf';
 export interface RegistrationDraft {
   telegramId: string;
   username: string;
+  nickname: string;
   profession: string; // будет хранить ObjectId как строку
   targetProfession: string; // будет хранить ObjectId как строку
   experienceYears: number;
@@ -12,13 +13,17 @@ export interface RegistrationDraft {
 export interface SessionData {
   step?:
     | 'sphere'
+    | 'nickname'
     | 'profession'
     | 'targetProfession'
     | 'experienceYears'
     | 'about'
-    | 'confirm';
+    | 'confirm'
+    | 'editNickname'
+    | 'editAbout';
   data: Partial<RegistrationDraft>;
   isAdmin?: boolean; // является ли пользователь администратором
+  isRefill?: boolean;
 }
 
 export interface MyContext extends Context {

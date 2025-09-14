@@ -9,9 +9,10 @@ type User = Partial<Omit<UserDocument, 'profession' | 'targetProfession'>> & {
 export const formatUserProfile = (user: User): string => {
   const toLabel = (p: string | ProfessionDocument | undefined): string =>
     typeof p === 'string' ? p : (p?.name ?? '—');
+  const nickname = user.nickname ?? '—';
   const lines: string[] = [
     '====================',
-    '      Профиль      ',
+    `   Профиль: ${nickname}   `,
     '====================',
     '--------------------',
     'Профессия: ' + toLabel(user.profession),

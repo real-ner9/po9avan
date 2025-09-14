@@ -13,6 +13,9 @@ export class User {
   @Prop()
   username: string;
 
+  @Prop({ type: String, maxlength: 24 })
+  nickname: string;
+
   @Prop({ type: Types.ObjectId, ref: Profession.name })
   profession: ProfessionDocument;
 

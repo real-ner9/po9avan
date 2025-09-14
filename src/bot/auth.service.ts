@@ -5,6 +5,7 @@ import { REPLIES } from '../common/constants/replies';
 import { ERRORS } from '../common/constants/errors';
 import { ProfessionService } from '../catalogs/profession/profession.service';
 import { formatUserProfile } from '../common/utils/formatters';
+import { generateNickname, sanitizePlainText } from '../common/utils/sanitize';
 
 @Injectable()
 export class AuthService {
@@ -15,22 +16,33 @@ export class AuthService {
 
   async handleStart(ctx: MyContext) {
     const telegramId = ctx.from?.id?.toString();
-    if (!telegramId) return;
-
     const existing = await this.userService.findByTelegramId(telegramId);
     if (existing) {
       await ctx.reply(formatUserProfile(existing));
       return;
     }
 
+    await this.startRegistration(ctx);
+  }
+
+  async startRegistration(ctx: MyContext) {
     // init session for registration
     ctx.session = ctx.session ?? {};
     ctx.session.data = {
-      telegramId,
+      telegramId: ctx.from?.id?.toString() || '',
       username: ctx.from?.username ?? undefined,
     };
-    ctx.session.step = 'profession';
+    ctx.session.step = 'nickname';
     await ctx.reply(REPLIES.REGISTRATION.INTRO);
+    await ctx.reply(REPLIES.REGISTRATION.NICKNAME);
+  }
+
+  async handleNicknameStep(ctx: MyContext, text: string) {
+    const raw = text.trim();
+    const nickname = sanitizePlainText(raw, 24) || generateNickname(ctx.from?.username);
+    ctx.session.data.nickname = nickname;
+    ctx.session.step = 'profession';
+    await ctx.reply(`Отлично! Никнейм: ${nickname}`);
     await ctx.reply(REPLIES.REGISTRATION.PROFESSION);
     await ctx.reply(REPLIES.NOTIFICATION.SEARCH, {
       reply_markup: {
@@ -93,7 +105,7 @@ export class AuthService {
   }
 
   async handleAboutStep(ctx: MyContext, text: string) {
-    const about = text.trim();
+    const about = sanitizePlainText(text, 400);
     if (about.length > 400) {
       await ctx.reply(REPLIES.REGISTRATION.ABOUT_TOO_LONG);
       return;
@@ -134,8 +146,15 @@ export class AuthService {
       return this.exitSession(ctx);
     }
     try {
-      await this.userService.createUser(data as RegistrationDraft);
+      const saved = await this.userService.upsertUserFromDraft(
+        data as RegistrationDraft,
+      );
       await ctx.reply(REPLIES.REGISTRATION.SAVED);
+      // показать профиль
+      const profile = await this.userService.findByTelegramId(saved.telegramId);
+      if (profile) {
+        await ctx.reply(formatUserProfile(profile));
+      }
     } catch (error) {
       await ctx.reply(
         '❌ Ошибка при сохранении данных. Пожалуйста, попробуйте ещё раз.',
