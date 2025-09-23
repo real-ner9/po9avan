@@ -1,29 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { InlineKeyboardMarkup } from '@telegraf/types/markup';
 import { MyContext } from './types/my-context';
 import { FeedService } from '../feed/feed.service';
 import { formatUserProfile } from '../common/utils/formatters';
+import { UserService } from '../user/user.service';
+import { ERRORS } from '../common/constants/errors';
+import { buildFeedKeyboard, getEmojiByKind } from '../feed/reactionHelpers';
+import { ReactionKind } from '../feed/schemas/reaction.schema';
 
 @Injectable()
 export class FeedUiService {
-  constructor(private readonly feedService: FeedService) {}
-
-  buildFeedKeyboard(candidateId: Types.ObjectId): InlineKeyboardMarkup['inline_keyboard'] {
-    return [
-      [
-        { text: '👎', callback_data: `feed_dislike:${candidateId}` },
-        { text: '👍', callback_data: `feed_like:${candidateId}` },
-      ],
-    ];
-  }
-
-  getEmojiByKind(kind: 'like' | 'dislike'): string {
-    return kind === 'like' ? '👍' : '👎';
-  }
+  constructor(
+    private readonly feedService: FeedService,
+    private readonly userService: UserService,
+  ) {}
 
   async updateMessageWithMarker(ctx: MyContext, marker: string, emoji: string) {
-    const originalMessage = (ctx.callbackQuery?.message as any)?.text as string | undefined;
+    const originalMessage = (ctx.callbackQuery?.message as any)?.text as
+      | string
+      | undefined;
     if (originalMessage) {
       const hasMarker = originalMessage.includes(marker);
       const updated = hasMarker
@@ -35,17 +30,61 @@ export class FeedUiService {
     }
   }
 
-  async showNext(ctx: MyContext, meId: Types.ObjectId) {
-    const candidate = await this.feedService.getNextCandidate(meId);
+  async showNext(ctx: MyContext) {
+    const me = await this.userService.findByTelegramId(
+      ctx.from?.id?.toString(),
+    );
+    if (!me) {
+      await ctx.reply(ERRORS.USER_NOT_FOUND);
+      return;
+    }
+
+    const candidate = await this.feedService.getNextCandidate(me._id);
     if (!candidate) {
       await ctx.reply('Кандидатов больше нет. Попробуйте позже.');
       return;
     }
-    const keyboard = this.buildFeedKeyboard(candidate._id as unknown as Types.ObjectId);
-    await ctx.reply(formatUserProfile(candidate as any), {
+    const keyboard = buildFeedKeyboard(candidate._id);
+
+    await ctx.reply(formatUserProfile(candidate), {
       reply_markup: { inline_keyboard: keyboard },
     });
   }
+
+  private parseObjectIdFromMatch(ctx: MyContext): Types.ObjectId | null {
+    const match = ctx.match;
+    const id = match?.groups?.id;
+    return id ? new Types.ObjectId(id) : null;
+  }
+
+  async handleFeedReaction(ctx: MyContext) {
+    const me = await this.userService.findByTelegramId(
+      ctx.from?.id?.toString(),
+    );
+    if (!me) return;
+    const toId = this.parseObjectIdFromMatch(ctx);
+    const match = ctx.match;
+    const kind = match?.[1] as ReactionKind;
+    if (!toId) return;
+    const result = await this.feedService.react(me._id, toId, kind);
+    const emoji = getEmojiByKind(kind);
+    try {
+      await this.updateMessageWithMarker(ctx, 'Ваш выбор:', emoji);
+      await ctx.answerCbQuery(
+        kind === 'like' ? 'Поставлен лайк' : 'Поставлен дизлайк',
+      );
+    } catch (e) {
+      try {
+        await ctx.answerCbQuery(
+          kind === 'like' ? 'Поставлен лайк' : 'Поставлен дизлайк',
+        );
+      } catch {}
+    }
+    if (result?.match) {
+      try {
+        await ctx.reply('🎉 У вас новый матч! Посмотреть — /matches');
+      } catch {}
+    }
+    await this.showNext(ctx);
+  }
 }
-
-

@@ -27,6 +27,9 @@ export class User {
 
   @Prop({ type: String })
   about: string;
+
+  @Prop({ type: String })
+  avatarFileId?: string;
 }
 
 export type UserDocument = User & Document<Types.ObjectId>;

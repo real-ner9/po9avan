@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Match, MatchDocument } from './match.schema';
+import { Match, MatchDocument } from './schemas/match.schema';
 
 @Injectable()
 export class MatchService {
@@ -38,5 +38,3 @@ export class MatchService {
     );
   }
 }
-
-

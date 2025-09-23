@@ -24,15 +24,14 @@ export class ProfessionService {
     );
   }
 
-  async search(query: string | undefined, limit = 20) {
+  async search(
+    query: string | undefined,
+    limit = 20,
+  ): Promise<ProfessionDocument[]> {
     const q = (query || '').trim();
     const max = Math.min(limit, 50);
     if (!q) {
-      return this.model
-        .find({})
-        .sort({ name: 1 })
-        .limit(max)
-        .lean();
+      return this.model.find({}).sort({ name: 1 }).limit(max).lean();
     }
     const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     return this.model

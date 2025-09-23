@@ -14,6 +14,10 @@ export class UserService {
     private readonly professionService: ProfessionService,
   ) {}
 
+  getUserModel(): Model<UserDocument> {
+    return this.userModel;
+  }
+
   findByTelegramId(
     telegramId: string | undefined,
   ): Promise<UserDocument | null> {
@@ -40,55 +44,22 @@ export class UserService {
     return user.save();
   }
 
-  getModel(): Model<UserDocument> {
-    return this.userModel;
-  }
-
-  async updateNicknameByTelegramId(
-    telegramId: string,
-    rawNickname: string,
-  ): Promise<void> {
-    const nickname = sanitizePlainText(rawNickname, 24);
-    await this.userModel.updateOne({ telegramId }, { $set: { nickname } });
-  }
-
-  async updateAboutByTelegramId(
-    telegramId: string,
-    rawAbout: string,
-  ): Promise<void> {
-    const about = sanitizePlainText(rawAbout, 400);
-    await this.userModel.updateOne({ telegramId }, { $set: { about } });
-  }
-
-  async deleteByTelegramId(telegramId: string): Promise<void> {
-    await this.userModel.deleteOne({ telegramId });
-  }
-
-  async upsertUserFromDraft(data: RegistrationDraft): Promise<UserDocument> {
-    const profession = await this.professionService.findById(data.profession);
-    const targetProfession = await this.professionService.findById(
-      data.targetProfession,
-    );
-    if (!profession || !targetProfession) {
-      throw new Error(ERRORS.PROFESSION_NOT_FOUND);
+  async updateByTelegramId(
+    telegramId: string | undefined,
+    update: Partial<Pick<User, 'nickname' | 'about' | 'avatarFileId'>>,
+  ): Promise<UserDocument | null> {
+    if (!telegramId) throw new Error(ERRORS.USER_NOT_FOUND);
+    const payload: Partial<User> = {};
+    if (typeof update.nickname === 'string') {
+      payload.nickname = sanitizePlainText(update.nickname, 24);
     }
-    await this.userModel.updateOne(
-      { telegramId: data.telegramId },
-      {
-        $set: {
-          telegramId: data.telegramId,
-          username: data.username,
-          nickname: data.nickname,
-          experienceYears: data.experienceYears,
-          about: data.about,
-          profession: (profession as any)._id,
-          targetProfession: (targetProfession as any)._id,
-        },
-      },
-      { upsert: true, setDefaultsOnInsert: true },
-    );
-    const saved = await this.findByTelegramId(data.telegramId);
-    if (!saved) throw new Error('User upsert failed');
-    return saved;
+    if (typeof update.about === 'string') {
+      payload.about = sanitizePlainText(update.about, 400);
+    }
+    if (typeof update.avatarFileId === 'string') {
+      payload.avatarFileId = update.avatarFileId.trim();
+    }
+    await this.userModel.updateOne({ telegramId }, { $set: payload }).exec();
+    return this.findByTelegramId(telegramId);
   }
 }

@@ -1,6 +1,7 @@
 import { OnModuleInit, Injectable } from '@nestjs/common';
 import { Telegraf } from 'telegraf';
 import { InjectBot } from 'nestjs-telegraf';
+import { COMMANDS } from '../common/constants/commands';
 
 @Injectable()
 export class BotInitializer implements OnModuleInit {
@@ -8,9 +9,9 @@ export class BotInitializer implements OnModuleInit {
 
   async onModuleInit() {
     await this.bot.telegram.setMyCommands([
-      { command: 'profile', description: '📺 Профиль' },
-      { command: 'feed', description: '📰 Лента' },
-      { command: 'matches', description: 'Метчи' },
+      { command: COMMANDS.PROFILE, description: '📺 Профиль' },
+      { command: COMMANDS.FEED, description: '📰 Лента' },
+      { command: COMMANDS.MATCHES, description: 'Метчи' },
     ]);
   }
 }

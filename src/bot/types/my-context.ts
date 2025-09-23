@@ -8,22 +8,18 @@ export interface RegistrationDraft {
   targetProfession: string; // будет хранить ObjectId как строку
   experienceYears: number;
   about: string;
+  avatarFileId?: string;
 }
 
 export interface SessionData {
-  step?:
-    | 'sphere'
-    | 'nickname'
-    | 'profession'
-    | 'targetProfession'
-    | 'experienceYears'
-    | 'about'
-    | 'confirm'
-    | 'editNickname'
-    | 'editAbout';
+  step?: import('../../common/constants/steps').RegStep;
   data: Partial<RegistrationDraft>;
   isAdmin?: boolean; // является ли пользователь администратором
   isRefill?: boolean;
+  matches?: {
+    ids: string[];
+    index: number;
+  };
 }
 
 export interface MyContext extends Context {

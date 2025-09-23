@@ -2,12 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { MyContext } from './types/my-context';
 import { AuthService } from './auth.service';
 import { REPLIES } from '../common/constants/replies';
+import { REG_STEPS } from '../common/constants/steps';
 
 @Injectable()
 export class StepsService {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   async onStepHandler(ctx: MyContext) {
     if (!ctx.session || !ctx.message || !('text' in ctx.message)) return;
@@ -20,27 +19,32 @@ export class StepsService {
     if (!text || !step) return;
 
     switch (step) {
-      case 'nickname': {
+      // auth
+      case REG_STEPS.NICKNAME: {
         await this.authService.handleNicknameStep(ctx, text);
         break;
       }
-      case 'profession': {
+      case REG_STEPS.PROFESSION: {
         await this.authService.handleProfessionStep(ctx, text);
         break;
       }
-      case 'targetProfession': {
+      case REG_STEPS.TARGET_PROFESSION: {
         await this.authService.handleTargetProfessionStep(ctx, text);
         break;
       }
-      case 'experienceYears': {
+      case REG_STEPS.EXPERIENCE_YEARS: {
         await this.authService.handleExperienceYearsStep(ctx, text);
         break;
       }
-      case 'about': {
+      case REG_STEPS.ABOUT: {
         await this.authService.handleAboutStep(ctx, text);
         break;
       }
-      case 'confirm': {
+      case REG_STEPS.AVATAR: {
+        await this.authService.handleAvatarStep(ctx);
+        break;
+      }
+      case REG_STEPS.CONFIRM: {
         await this.authService.handleConfirmStep(ctx, text);
         break;
       }

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Reaction, ReactionSchema } from './feed.schema';
+import { Reaction, ReactionSchema } from './schemas/reaction.schema';
 import { FeedService } from './feed.service';
 import { UserModule } from '../user/user.module';
 import { MatchModule } from '../match/match.module';
@@ -17,4 +17,3 @@ import { MatchModule } from '../match/match.module';
   exports: [FeedService],
 })
 export class FeedModule {}
-

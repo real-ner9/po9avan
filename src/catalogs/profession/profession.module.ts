@@ -14,5 +14,3 @@ import { ProfessionSeeder } from './profession.seeder';
   exports: [ProfessionService],
 })
 export class ProfessionModule {}
-
-

@@ -12,5 +12,3 @@ export class Profession {
 
 export type ProfessionDocument = Profession & Document<Types.ObjectId>;
 export const ProfessionSchema = SchemaFactory.createForClass(Profession);
-
-

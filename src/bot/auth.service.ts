@@ -6,23 +6,40 @@ import { ERRORS } from '../common/constants/errors';
 import { ProfessionService } from '../catalogs/profession/profession.service';
 import { formatUserProfile } from '../common/utils/formatters';
 import { generateNickname, sanitizePlainText } from '../common/utils/sanitize';
+import { CALLBACKS } from '../common/constants/callbacks';
+import { REG_STEPS } from '../common/constants/steps';
+import { BotService } from './bot.service';
+import { NO, YES } from '../common/constants/commands';
+
+// no aliasing to keep style consistent
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly professionService: ProfessionService,
+    private readonly botService: BotService,
   ) {}
 
   async handleStart(ctx: MyContext) {
-    const telegramId = ctx.from?.id?.toString();
-    const existing = await this.userService.findByTelegramId(telegramId);
-    if (existing) {
-      await ctx.reply(formatUserProfile(existing));
-      return;
-    }
+    try {
+      const telegramId = ctx.from?.id?.toString();
+      if (!telegramId) {
+        await ctx.reply('❌ Не удалось получить данные пользователя.');
+        return;
+      }
 
-    await this.startRegistration(ctx);
+      const existing = await this.userService.findByTelegramId(telegramId);
+      if (existing) {
+        await ctx.reply(formatUserProfile(existing));
+        return;
+      }
+
+      await this.startRegistration(ctx);
+    } catch (error) {
+      console.error('Error in handleStart:', error);
+      await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
   }
 
   async startRegistration(ctx: MyContext) {
@@ -32,16 +49,17 @@ export class AuthService {
       telegramId: ctx.from?.id?.toString() || '',
       username: ctx.from?.username ?? undefined,
     };
-    ctx.session.step = 'nickname';
+    ctx.session.step = REG_STEPS.NICKNAME;
     await ctx.reply(REPLIES.REGISTRATION.INTRO);
     await ctx.reply(REPLIES.REGISTRATION.NICKNAME);
   }
 
   async handleNicknameStep(ctx: MyContext, text: string) {
     const raw = text.trim();
-    const nickname = sanitizePlainText(raw, 24) || generateNickname(ctx.from?.username);
+    const nickname =
+      sanitizePlainText(raw, 24) || generateNickname(ctx.from?.username);
     ctx.session.data.nickname = nickname;
-    ctx.session.step = 'profession';
+    ctx.session.step = REG_STEPS.PROFESSION;
     await ctx.reply(`Отлично! Никнейм: ${nickname}`);
     await ctx.reply(REPLIES.REGISTRATION.PROFESSION);
     await ctx.reply(REPLIES.NOTIFICATION.SEARCH, {
@@ -65,7 +83,7 @@ export class AuthService {
       return;
     }
     ctx.session.data.profession = match.groups.id;
-    ctx.session.step = 'targetProfession';
+    ctx.session.step = REG_STEPS.TARGET_PROFESSION;
 
     await ctx.reply(REPLIES.REGISTRATION.TARGET_PROFESSION);
     await ctx.reply(REPLIES.NOTIFICATION.SEARCH, {
@@ -89,84 +107,86 @@ export class AuthService {
       return;
     }
     ctx.session.data.targetProfession = match.groups.id;
-    ctx.session.step = 'experienceYears';
+    ctx.session.step = REG_STEPS.EXPERIENCE_YEARS;
     await ctx.reply(REPLIES.REGISTRATION.EXPERIENCE);
   }
 
   async handleExperienceYearsStep(ctx: MyContext, text: string) {
     const value = Number(text.trim());
     if (!Number.isFinite(value) || value < 1 || value > 13) {
-      await ctx.reply(REPLIES.REGISTRATION.EXPERIENCE_INVALID);
+      await ctx.reply(ERRORS.EXPERIENCE_INVALID);
       return;
     }
     ctx.session.data.experienceYears = value;
-    ctx.session.step = 'about';
+    ctx.session.step = REG_STEPS.ABOUT;
     await ctx.reply(REPLIES.REGISTRATION.ABOUT);
   }
 
   async handleAboutStep(ctx: MyContext, text: string) {
     const about = sanitizePlainText(text, 400);
     if (about.length > 400) {
-      await ctx.reply(REPLIES.REGISTRATION.ABOUT_TOO_LONG);
+      await ctx.reply(ERRORS.ABOUT_TOO_LONG);
       return;
     }
     ctx.session.data.about = about;
-    const profession = await this.professionService.findById(
-      ctx.session.data.profession,
-    );
-    const targetProfession = await this.professionService.findById(
-      ctx.session.data.targetProfession,
-    );
-    if (!profession || !targetProfession) {
-      await ctx.reply(ERRORS.PROFESSION_NOT_FOUND);
-      return this.exitSession(ctx);
+    ctx.session.step = REG_STEPS.AVATAR;
+    await ctx.reply(REPLIES.REGISTRATION.AVATAR, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Пропустить',
+              callback_data: CALLBACKS.SKIP_AVATAR,
+            },
+          ],
+        ],
+      },
+    });
+  }
+
+  async handleAvatarStep(ctx: MyContext) {
+    console.log(ctx.message);
+    if (!ctx.message || !('photo' in ctx.message)) {
+      await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
+      return;
     }
-    await ctx.reply(
-      formatUserProfile({
-        ...ctx.session.data,
-        profession: profession.name,
-        targetProfession: targetProfession.name,
-      }),
-    );
-    ctx.session.step = 'confirm';
-    await ctx.reply(REPLIES.REGISTRATION.CONFIRM_INTRO);
+    const photos = ctx.message.photo as { file_id: string }[];
+    if (!photos?.length) {
+      await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
+      return;
+    }
+    ctx.session.data.avatarFileId = photos[photos.length - 1].file_id;
+    await this.handleAvatarStepEnd(ctx);
+  }
+
+  async handleAvatarStepEnd(ctx: MyContext) {
+    ctx.session.step = REG_STEPS.CONFIRM;
+    await ctx.reply(formatUserProfile(ctx.session.data as RegistrationDraft));
+    await ctx.reply(REPLIES.REGISTRATION.CONFIRM, {
+      reply_markup: { remove_keyboard: true },
+    });
   }
 
   async handleConfirmStep(ctx: MyContext, text: string) {
-    if (text.toLowerCase() === 'да') {
-      await this.confirmSession(ctx);
-    } else {
+    if (text.toLowerCase() === YES) {
+      return this.confirmSession(ctx);
+    }
+    if (text.toLowerCase() === NO) {
+      await ctx.reply(REPLIES.NOTIFICATION.EXIT);
       return this.exitSession(ctx);
     }
+    await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
+    return;
   }
 
   private async confirmSession(ctx: MyContext) {
-    const data = ctx.session.data;
-    if (!data) {
-      return this.exitSession(ctx);
-    }
-    try {
-      const saved = await this.userService.upsertUserFromDraft(
-        data as RegistrationDraft,
-      );
-      await ctx.reply(REPLIES.REGISTRATION.SAVED);
-      // показать профиль
-      const profile = await this.userService.findByTelegramId(saved.telegramId);
-      if (profile) {
-        await ctx.reply(formatUserProfile(profile));
-      }
-    } catch (error) {
-      await ctx.reply(
-        '❌ Ошибка при сохранении данных. Пожалуйста, попробуйте ещё раз.',
-      );
-      console.log(error);
-    }
-    ctx.session.step = undefined;
-    ctx.session.data = {};
+    await this.userService.createUser(ctx.session.data as RegistrationDraft);
+    await ctx.reply(REPLIES.REGISTRATION.SAVED);
+    await this.botService.handleProfile(ctx);
+    this.exitSession(ctx);
   }
 
-  private async exitSession(ctx: MyContext) {
-    await ctx.reply(REPLIES.NOTIFICATION.EXIT);
+  private exitSession(ctx: MyContext) {
     ctx.session.step = undefined;
     ctx.session.data = {};
     return;

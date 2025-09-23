@@ -1,20 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Reaction, ReactionDocument } from './feed.schema';
-import { User, UserDocument } from '../user/schemas/user.schema';
+import { Reaction, ReactionDocument, ReactionKind } from './schemas/reaction.schema';
+import { UserDocument } from '../user/schemas/user.schema';
 import { MatchService } from '../match/match.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class FeedService {
   constructor(
     @InjectModel(Reaction.name)
     private readonly reactionModel: Model<ReactionDocument>,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly matchService: MatchService,
+    private readonly userService: UserService,
   ) {}
 
-  async getNextCandidate(currentUserId: Types.ObjectId) {
+  async getNextCandidate(
+    currentUserId: Types.ObjectId,
+  ): Promise<UserDocument | null> {
     const exclude: Types.ObjectId[] = [currentUserId];
     // Exclude users already reacted to by current user
     const reacted = await this.reactionModel
@@ -24,31 +27,30 @@ export class FeedService {
     const reactedIds = reacted.map((r) => r.toUser);
     const excludedIds = [...exclude, ...reactedIds];
 
-    const criteria: any = { _id: { $nin: excludedIds } };
+    const criteria = { _id: { $nin: excludedIds } };
 
-    const user = await this.userModel
+    return this.userService
+      .getUserModel()
       .findOne(criteria)
       .sort({ createdAt: -1 })
       .lean();
-    return user || null;
   }
 
   async react(
     fromUserId: Types.ObjectId,
     toUserId: Types.ObjectId,
-    kind: 'like' | 'dislike',
+    kind: ReactionKind,
   ): Promise<{ match: boolean } | null> {
     if (fromUserId.equals(toUserId)) return null;
-    const prev = await this.reactionModel.findOne({
-      fromUser: fromUserId,
-      toUser: toUserId,
-    });
-    const res = await this.reactionModel.findOneAndUpdate(
-      { fromUser: fromUserId, toUser: toUserId },
-      { $set: { fromUser: fromUserId, toUser: toUserId, kind } },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
-    );
-    // create match on mutual like
+    // const prev = await this.reactionModel.findOne({
+    //   fromUser: fromUserId,
+    //   toUser: toUserId,
+    // });
+    // const res = await this.reactionModel.findOneAndUpdate(
+    //   { fromUser: fromUserId, toUser: toUserId },
+    //   { $set: { fromUser: fromUserId, toUser: toUserId, kind } },
+    //   { upsert: true, new: true, setDefaultsOnInsert: true },
+    // );
     if (kind === 'like') {
       const reciprocal = await this.reactionModel.findOne({
         fromUser: toUserId,

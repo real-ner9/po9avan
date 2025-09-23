@@ -10,9 +10,10 @@ export const formatUserProfile = (user: User): string => {
   const toLabel = (p: string | ProfessionDocument | undefined): string =>
     typeof p === 'string' ? p : (p?.name ?? '—');
   const nickname = user.nickname ?? '—';
+  const hasAvatar = user.avatarFileId ? '📷' : '❓';
   const lines: string[] = [
     '====================',
-    `   Профиль: ${nickname}   `,
+    `   ${hasAvatar} Профиль: ${nickname}   `,
     '====================',
     '--------------------',
     'Профессия: ' + toLabel(user.profession),
