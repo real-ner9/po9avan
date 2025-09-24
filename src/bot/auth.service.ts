@@ -131,18 +131,7 @@ export class AuthService {
     }
     ctx.session.data.about = about;
     ctx.session.step = REG_STEPS.CONFIRM;
-    await ctx.reply(REPLIES.REGISTRATION.AVATAR, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: 'Пропустить',
-              callback_data: CALLBACKS.SKIP_AVATAR,
-            },
-          ],
-        ],
-      },
-    });
+    await ctx.reply(REPLIES.REGISTRATION.CONFIRM);
   }
 
   async handleConfirmStep(ctx: MyContext, text: string) {
