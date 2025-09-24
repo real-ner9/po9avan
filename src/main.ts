@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 
 dotenv.config({
-  path: '.env.dev',
+  path: '.env.prod',
 });
 
 import { NestFactory } from '@nestjs/core';
