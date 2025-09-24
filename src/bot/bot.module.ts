@@ -4,7 +4,7 @@ import { FeedUiService } from './feed-ui.service';
 import { FeedUpdate } from './updates/feed.update';
 import { MatchUpdate } from './updates/match.update';
 import { StepsUpdate } from './updates/steps.update';
-import { BotService } from './bot.service';
+import { ProfileService } from './profile.service';
 import { BotInitializer } from './bot.initializer';
 import { UserModule } from '../user/user.module';
 import { session } from 'telegraf';
@@ -13,8 +13,8 @@ import { AuthService } from './auth.service';
 import { ProfessionModule } from '../catalogs/profession/profession.module';
 import { FeedModule } from '../feed/feed.module';
 import { MatchModule } from '../match/match.module';
-import { MatchUiService } from './match-ui.service';
-import { UserUpdate } from './updates/user.update';
+import { ProfileUpdate } from './updates/profile.update';
+import { MatchesUiService } from './matches-ui.service';
 
 @Module({
   imports: [
@@ -29,16 +29,16 @@ import { UserUpdate } from './updates/user.update';
   ],
   providers: [
     BotInitializer,
-    UserUpdate,
+    ProfileUpdate,
     FeedUpdate,
     MatchUpdate,
     StepsUpdate,
-    BotService,
+    ProfileService,
     StepsService,
     AuthService,
     FeedUiService,
-    MatchUiService,
+    MatchesUiService,
   ],
-  exports: [BotService, StepsService],
+  exports: [ProfileService, StepsService],
 })
 export class BotModule {}

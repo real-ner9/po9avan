@@ -14,11 +14,11 @@ export const buildFeedKeyboard = (
     [
       {
         text: getEmojiByKind(REACTION_KIND_DISLIKE),
-        callback_data: `${CALLBACKS.FEED_DISLIKE}:${candidateId}`,
+        callback_data: `${REACTION_KIND_DISLIKE}:${candidateId}`,
       },
       {
         text: getEmojiByKind(REACTION_KIND_LIKE),
-        callback_data: `${CALLBACKS.FEED_LIKE}:${candidateId}`,
+        callback_data: `${REACTION_KIND_LIKE}:${candidateId}`,
       },
     ],
   ];

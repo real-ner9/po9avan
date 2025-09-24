@@ -42,15 +42,15 @@ export class FeedService {
     kind: ReactionKind,
   ): Promise<{ match: boolean } | null> {
     if (fromUserId.equals(toUserId)) return null;
-    // const prev = await this.reactionModel.findOne({
-    //   fromUser: fromUserId,
-    //   toUser: toUserId,
-    // });
-    // const res = await this.reactionModel.findOneAndUpdate(
-    //   { fromUser: fromUserId, toUser: toUserId },
-    //   { $set: { fromUser: fromUserId, toUser: toUserId, kind } },
-    //   { upsert: true, new: true, setDefaultsOnInsert: true },
-    // );
+    const prev = await this.reactionModel.findOne({
+      fromUser: fromUserId,
+      toUser: toUserId,
+    });
+    const res = await this.reactionModel.findOneAndUpdate(
+      { fromUser: fromUserId, toUser: toUserId },
+      { $set: { fromUser: fromUserId, toUser: toUserId, kind } },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
     if (kind === 'like') {
       const reciprocal = await this.reactionModel.findOne({
         fromUser: toUserId,

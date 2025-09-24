@@ -21,20 +21,17 @@ export class MatchService {
     return doc;
   }
 
-  async exists(a: Types.ObjectId, b: Types.ObjectId): Promise<boolean> {
-    const [userA, userB] = a.toString() < b.toString() ? [a, b] : [b, a];
-    const found = await this.matchModel.exists({ userA, userB });
-    return Boolean(found);
-  }
-
   async listForUser(userId: Types.ObjectId): Promise<Types.ObjectId[]> {
+    const me = userId.toString();
     const docs = await this.matchModel
       .find({ $or: [{ userA: userId }, { userB: userId }] })
+      .select('userA userB')
       .lean();
-    return docs.map((m) =>
-      (m.userA as unknown as Types.ObjectId).equals(userId)
-        ? (m.userB as unknown as Types.ObjectId)
-        : (m.userA as unknown as Types.ObjectId),
-    );
+    return docs.map((m) => {
+      const a = (m.userA as any).toString();
+      const b = (m.userB as any).toString();
+      const other = a === me ? b : a;
+      return new Types.ObjectId(other);
+    });
   }
 }

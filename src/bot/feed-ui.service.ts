@@ -44,10 +44,9 @@ export class FeedUiService {
       await ctx.reply('Кандидатов больше нет. Попробуйте позже.');
       return;
     }
-    const keyboard = buildFeedKeyboard(candidate._id);
 
     await ctx.reply(formatUserProfile(candidate), {
-      reply_markup: { inline_keyboard: keyboard },
+      reply_markup: { inline_keyboard: buildFeedKeyboard(candidate._id) },
     });
   }
 
@@ -67,19 +66,8 @@ export class FeedUiService {
     const kind = match?.[1] as ReactionKind;
     if (!toId) return;
     const result = await this.feedService.react(me._id, toId, kind);
-    const emoji = getEmojiByKind(kind);
-    try {
-      await this.updateMessageWithMarker(ctx, 'Ваш выбор:', emoji);
-      await ctx.answerCbQuery(
-        kind === 'like' ? 'Поставлен лайк' : 'Поставлен дизлайк',
-      );
-    } catch (e) {
-      try {
-        await ctx.answerCbQuery(
-          kind === 'like' ? 'Поставлен лайк' : 'Поставлен дизлайк',
-        );
-      } catch {}
-    }
+    await ctx.reply(getEmojiByKind(kind));
+
     if (result?.match) {
       try {
         await ctx.reply('🎉 У вас новый матч! Посмотреть — /matches');

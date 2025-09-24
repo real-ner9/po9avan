@@ -35,13 +35,25 @@ export class UserService {
     if (!profession || !targetProfession) {
       throw new Error(ERRORS.PROFESSION_NOT_FOUND);
     }
-
-    const user = new this.userModel({
-      ...data,
-      profession,
-      targetProfession,
-    });
-    return user.save();
+    await this.userModel
+      .updateOne(
+        { telegramId: data.telegramId },
+        {
+          $set: {
+            telegramId: data.telegramId,
+            username: data.username,
+            nickname: data.nickname,
+            profession,
+            targetProfession,
+            experienceYears: data.experienceYears,
+            about: data.about,
+            avatarFileId: data.avatarFileId,
+          },
+        },
+        { upsert: true },
+      )
+      .exec();
+    return this.findByTelegramId(data.telegramId);
   }
 
   async updateByTelegramId(

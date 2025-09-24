@@ -8,7 +8,7 @@ import { formatUserProfile } from '../common/utils/formatters';
 import { generateNickname, sanitizePlainText } from '../common/utils/sanitize';
 import { CALLBACKS } from '../common/constants/callbacks';
 import { REG_STEPS } from '../common/constants/steps';
-import { BotService } from './bot.service';
+import { ProfileService } from './profile.service';
 import { NO, YES } from '../common/constants/commands';
 
 // no aliasing to keep style consistent
@@ -18,8 +18,9 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly professionService: ProfessionService,
-    private readonly botService: BotService,
+    private readonly botService: ProfileService,
   ) {}
+  private professionRegExp = /^prof:(?<id>[a-fA-F0-9]{24})\b/;
 
   async handleStart(ctx: MyContext) {
     try {
@@ -76,8 +77,9 @@ export class AuthService {
     });
   }
 
+  // ПРОФЕССИЯ/ МБ ПОТОМ НОРМ СДЕЛАЮ ЩА ЛЕНЬ
   async handleProfessionStep(ctx: MyContext, text: string) {
-    const match = text.match(/^prof:(?<id>[a-fA-F0-9]{24})\b/);
+    const match = text.match(this.professionRegExp);
     if (!match?.groups?.id) {
       await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
       return;
@@ -99,9 +101,8 @@ export class AuthService {
       },
     });
   }
-
   async handleTargetProfessionStep(ctx: MyContext, text: string) {
-    const match = text.match(/^prof:(?<id>[a-fA-F0-9]{24})\b/);
+    const match = text.match(this.professionRegExp);
     if (!match?.groups?.id) {
       await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
       return;
@@ -129,7 +130,7 @@ export class AuthService {
       return;
     }
     ctx.session.data.about = about;
-    ctx.session.step = REG_STEPS.AVATAR;
+    ctx.session.step = REG_STEPS.CONFIRM;
     await ctx.reply(REPLIES.REGISTRATION.AVATAR, {
       reply_markup: {
         inline_keyboard: [
@@ -141,29 +142,6 @@ export class AuthService {
           ],
         ],
       },
-    });
-  }
-
-  async handleAvatarStep(ctx: MyContext) {
-    console.log(ctx.message);
-    if (!ctx.message || !('photo' in ctx.message)) {
-      await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
-      return;
-    }
-    const photos = ctx.message.photo as { file_id: string }[];
-    if (!photos?.length) {
-      await ctx.reply(REPLIES.NOTIFICATION.FOLLOW_INSTRUCTIONS);
-      return;
-    }
-    ctx.session.data.avatarFileId = photos[photos.length - 1].file_id;
-    await this.handleAvatarStepEnd(ctx);
-  }
-
-  async handleAvatarStepEnd(ctx: MyContext) {
-    ctx.session.step = REG_STEPS.CONFIRM;
-    await ctx.reply(formatUserProfile(ctx.session.data as RegistrationDraft));
-    await ctx.reply(REPLIES.REGISTRATION.CONFIRM, {
-      reply_markup: { remove_keyboard: true },
     });
   }
 

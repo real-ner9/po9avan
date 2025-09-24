@@ -1,37 +1,21 @@
-import { Update, Action, Ctx, Command } from 'nestjs-telegraf';
+import { Update, Ctx, Command } from 'nestjs-telegraf';
 import { MyContext } from '../types/my-context';
-import { MatchUiService } from '../match-ui.service';
 import { COMMANDS } from '../../common/constants/commands';
-import { CALLBACKS } from '../../common/constants/callbacks';
+import { MatchService } from '../../match/match.service';
+import { UserService } from '../../user/user.service';
+import { UserDocument } from '../../user/schemas/user.schema';
+import { formatUserProfile } from '../../common/utils/formatters';
+import { MatchesUiService } from '../matches-ui.service';
 
 @Update()
 export class MatchUpdate {
-  constructor(private readonly matchUi: MatchUiService) {}
+  constructor(
+    private readonly matchesUiService: MatchesUiService,
+    private readonly userService: UserService,
+  ) {}
 
   @Command(COMMANDS.MATCHES)
-  async onMenuMatches(@Ctx() ctx: MyContext) {
-    await this.matchUi.showList(ctx);
-  }
-
-  @Action(new RegExp(`^${CALLBACKS.MATCH_OPEN}:(?<id>[a-fA-F0-9]{24})$`))
-  async onOpen(@Ctx() ctx: MyContext) {
-    await this.matchUi.handleOpenMatch(ctx);
-  }
-
-  @Action(new RegExp(`^${CALLBACKS.MATCHES_PREV}$`))
-  async onPrev(@Ctx() ctx: MyContext) {
-    await this.matchUi.handlePrev(ctx);
-  }
-
-  @Action(new RegExp(`^${CALLBACKS.MATCHES_NEXT}$`))
-  async onNext(@Ctx() ctx: MyContext) {
-    await this.matchUi.handleNext(ctx);
-  }
-
-  @Action(new RegExp('^noop$'))
-  async onNoop(@Ctx() ctx: MyContext) {
-    try {
-      await ctx.answerCbQuery();
-    } catch {}
+  async onMatches(@Ctx() ctx: MyContext) {
+    await this.matchesUiService.handleMatches(ctx);
   }
 }

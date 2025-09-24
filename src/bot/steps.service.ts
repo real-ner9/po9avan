@@ -3,10 +3,14 @@ import { MyContext } from './types/my-context';
 import { AuthService } from './auth.service';
 import { REPLIES } from '../common/constants/replies';
 import { REG_STEPS } from '../common/constants/steps';
+import { ProfileService } from './profile.service';
 
 @Injectable()
 export class StepsService {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly profileService: ProfileService,
+  ) {}
 
   async onStepHandler(ctx: MyContext) {
     if (!ctx.session || !ctx.message || !('text' in ctx.message)) return;
@@ -40,12 +44,29 @@ export class StepsService {
         await this.authService.handleAboutStep(ctx, text);
         break;
       }
-      case REG_STEPS.AVATAR: {
-        await this.authService.handleAvatarStep(ctx);
-        break;
-      }
       case REG_STEPS.CONFIRM: {
         await this.authService.handleConfirmStep(ctx, text);
+        break;
+      }
+      // edit profile
+      case REG_STEPS.EDIT_NICKNAME: {
+        await this.profileService.handleEditNickname(ctx, text);
+        break;
+      }
+      case REG_STEPS.EDIT_ABOUT: {
+        await this.profileService.handleEditAbout(ctx, text);
+        break;
+      }
+      case REG_STEPS.EDIT_PROFESSION: {
+        await this.profileService.handleEditProfession(ctx, text);
+        break;
+      }
+      case REG_STEPS.EDIT_TARGET_PROFESSION: {
+        await this.profileService.handleEditTargetProfession(ctx, text);
+        break;
+      }
+      case REG_STEPS.EDIT_EXPERIENCE: {
+        await this.profileService.handleEditExperience(ctx, text);
         break;
       }
       default:
